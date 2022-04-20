@@ -1,0 +1,3 @@
+#pragma once
+
+uint WAVE_FRONT_ALGORITHM_GRID_CELL_SIZE = 20;
