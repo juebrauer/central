@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pyside6 = "*"
+pyside6 = "6.3.0"
+numpy = "*"
 
 [dev-packages]
 
