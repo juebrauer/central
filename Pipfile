@@ -12,6 +12,10 @@ torch = "*"
 seaborn = "*"
 yfinance = "*"
 jupyterlab = "*"
+pandas-profiling = "*"
+ipywidgets = "*"
+xgboost = "*"
+graphviz = "*"
 
 [dev-packages]
 
