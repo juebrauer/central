@@ -16,6 +16,7 @@ pandas-profiling = "*"
 ipywidgets = "*"
 xgboost = "*"
 graphviz = "*"
+pyside6 = "*"
 
 [dev-packages]
 
