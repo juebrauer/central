@@ -12,8 +12,6 @@
 # if you haven't installed it yet.
 
 
-import ast
-from calendar import c
 import PySide6.QtCore
 
 # Prints PySide6 version
@@ -23,18 +21,13 @@ print(PySide6.QtCore.__version__)
 
 
 import sys
-import random
 import numpy
 from PySide6 import QtCore, QtWidgets, QtGui
+import cell_types
 from astar_algorithm import astar
 
 
 class MyGrid(QtWidgets.QWidget):
-
-    celltype_empty = 0
-    celltype_wall  = 1
-    celltype_start = 2
-    celltype_goal  = 3
     
     def __init__(self, grid_height, grid_width ):
         super().__init__()
@@ -44,10 +37,10 @@ class MyGrid(QtWidgets.QWidget):
         self.grid = numpy.zeros( (self.grid_height, self.grid_width) )
 
         self.gridcell_colors = {}
-        self.gridcell_colors[MyGrid.celltype_empty]  = (255,255,255)
-        self.gridcell_colors[MyGrid.celltype_wall]   = (128,128,128)
-        self.gridcell_colors[MyGrid.celltype_start]  = (255,0,0)
-        self.gridcell_colors[MyGrid.celltype_goal]   = (0,0,255)
+        self.gridcell_colors[cell_types.celltype_empty]  = (255,255,255)
+        self.gridcell_colors[cell_types.celltype_wall]   = (128,128,128)
+        self.gridcell_colors[cell_types.celltype_start]  = (255,0,0)
+        self.gridcell_colors[cell_types.celltype_goal]   = (0,0,255)
 
         self.start = None
         self.goal  = None
@@ -80,11 +73,11 @@ class MyGrid(QtWidgets.QWidget):
         
         if event.button() == QtCore.Qt.LeftButton:            
             print( f"cell coordinates: {self.cell_x}, {self.cell_y}" )
-            self.grid[ self.cell_y, self.cell_x ] = MyGrid.celltype_wall
+            self.grid[ self.cell_y, self.cell_x ] = cell_types.celltype_wall
             
         elif event.button() == QtCore.Qt.RightButton:            
             print( f"cell coordinates: {self.cell_x}, {self.cell_y}" )
-            self.grid[ self.cell_y, self.cell_x ] = MyGrid.celltype_empty
+            self.grid[ self.cell_y, self.cell_x ] = cell_types.celltype_empty
 
         # induce re-drawing of the widget
         self.update()
@@ -200,13 +193,13 @@ class MyGrid(QtWidgets.QWidget):
         if self.start != None:
             visu_x = self.start[0] * self.gridcellvisu_width
             visu_y = self.start[1] * self.gridcellvisu_height
-            self.draw_cell(qp, visu_x, visu_y, MyGrid.celltype_start)
+            self.draw_cell(qp, visu_x, visu_y, cell_types.celltype_start)
 
         # highlight goal cell?
         if self.goal != None:
             visu_x = self.goal[0] * self.gridcellvisu_width
             visu_y = self.goal[1] * self.gridcellvisu_height
-            self.draw_cell(qp, visu_x, visu_y, MyGrid.celltype_goal)
+            self.draw_cell(qp, visu_x, visu_y, cell_types.celltype_goal)
 
 
         # overlay grid cells with node information
@@ -249,7 +242,7 @@ class MyGrid(QtWidgets.QWidget):
             
 
 app = QtWidgets.QApplication([])
-widget = MyGrid(grid_height=6, grid_width=6)
+widget = MyGrid(grid_height=10, grid_width=6)
 widget.resize(800, 800)
 widget.show()
 sys.exit(app.exec())

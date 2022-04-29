@@ -5,6 +5,7 @@
 # for this great algorithm!
 
 import numpy
+import cell_types
 
 class astar:
 
@@ -24,10 +25,10 @@ class astar:
         #  - its f-costs (yes, its redundant since f=g+h)
         #  - from which node we reached this node
         self.node_infos = {}
-        grid_height = self.map.shape[0]
-        grid_width  = self.map.shape[1]
-        for cell_y in range(0,grid_height):
-            for cell_x in range(0, grid_width):
+        self.grid_height = self.map.shape[0]
+        self.grid_width  = self.map.shape[1]
+        for cell_y in range(0,self.grid_height):
+            for cell_x in range(0, self.grid_width):
                 
                 # is this the start node?
                 if (cell_x,cell_y) == self.start:
@@ -58,6 +59,13 @@ class astar:
         # put the start node into the open list of nodes to expand
         self.openlist = [self.start]
 
+        # the following list of offset coordinates (dx,dy)
+        # defines what the neighbors of a node are
+        self.neighbors_offsets = [ (-1,-1), (0,-1), (+1,-1),
+                                   (-1, 0),         (+1, 0),
+                                   (-1,+1), (0,+1), (+1,+1)
+                                 ]
+
 
     def heuristic(self, nodeA, nodeB):
         dx = nodeA[0] - nodeB[0]
@@ -65,6 +73,35 @@ class astar:
         dist = int(numpy.sqrt(dx**2 + dy**2) * 10)
         return dist    
                 
+
+
+    def get_neighbors(self, node):
+        
+        neighbors = []
+                
+        for offset in self.neighbors_offsets:
+
+            # compute grid coordinates of neighbor
+            other_x = node[0] + offset[0]
+            other_y = node[1] + offset[1]
+
+            # is this a valid neighbor?
+
+            # neighbor coordinates valid?
+            if other_x < 0 or other_x>=self.grid_width or \
+               other_y < 0 or other_y>=self.grid_height:
+               # coordinates of neighbor are invalid (out of grid range)!
+               continue
+
+            # neighbor walkable?                
+            celltype = self.map[ other_y, other_x ]
+            if celltype == cell_types.celltype_wall:
+                # neighbor cell is a wall, so it is not walkable!
+                continue
+
+            neighbors.append( (other_x, other_y) )
+
+        return neighbors
         
 
 
@@ -99,6 +136,20 @@ class astar:
                 min_f_costs_found_so_far = f_costs
                 node_with_smallest_f_costs = node
         
-        print("Best node to expand is: ", node_with_smallest_f_costs )
+        print("Best node to expand is: ", node_with_smallest_f_costs )        
+
+
+        # 3. now that we have decided for a node to expand,
+        #    expand it!
+        node_to_expand = node_with_smallest_f_costs
+        neighbors = self.get_neighbors( node_to_expand )
+        for neighbor in neighbors:
+            print(neighbor)
+             
+
+               
+
+        
 
         return self.node_infos
+
