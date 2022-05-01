@@ -12,19 +12,22 @@
 # if you haven't installed it yet.
 
 
+from platform import node
 import PySide6.QtCore
 
 # Prints PySide6 version
-print(PySide6.__version__)
+#print(PySide6.__version__)
 # Prints the Qt version used to compile PySide6
-print(PySide6.QtCore.__version__)
+#print(PySide6.QtCore.__version__)
 
 
 import sys
 import numpy
 from PySide6 import QtCore, QtWidgets, QtGui
 import cell_types
+import astar_node_types
 from astar_algorithm import astar
+
 
 
 class MyGrid(QtWidgets.QWidget):
@@ -35,12 +38,6 @@ class MyGrid(QtWidgets.QWidget):
         self.grid_height = grid_height
         self.grid_width = grid_width        
         self.grid = numpy.zeros( (self.grid_height, self.grid_width) )
-
-        self.gridcell_colors = {}
-        self.gridcell_colors[cell_types.celltype_empty]  = (255,255,255)
-        self.gridcell_colors[cell_types.celltype_wall]   = (128,128,128)
-        self.gridcell_colors[cell_types.celltype_start]  = (255,0,0)
-        self.gridcell_colors[cell_types.celltype_goal]   = (0,0,255)
 
         self.start = None
         self.goal  = None
@@ -72,11 +69,11 @@ class MyGrid(QtWidgets.QWidget):
         self.update_current_selected_cell(event)
         
         if event.button() == QtCore.Qt.LeftButton:            
-            print( f"cell coordinates: {self.cell_x}, {self.cell_y}" )
+            #print( f"cell coordinates: {self.cell_x}, {self.cell_y}" )
             self.grid[ self.cell_y, self.cell_x ] = cell_types.celltype_wall
             
         elif event.button() == QtCore.Qt.RightButton:            
-            print( f"cell coordinates: {self.cell_x}, {self.cell_y}" )
+            #print( f"cell coordinates: {self.cell_x}, {self.cell_y}" )
             self.grid[ self.cell_y, self.cell_x ] = cell_types.celltype_empty
 
         # induce re-drawing of the widget
@@ -147,12 +144,10 @@ class MyGrid(QtWidgets.QWidget):
         qp.end()
 
 
-    def draw_cell(self, qp, visux, visuy, celltype):
+    def draw_cell(self, qp, visux, visuy, c):
 
         # set pen and brush color
-        qp.setPen( QtGui.QColor(0,0,0) )
-        rgb_values = self.gridcell_colors[ celltype ]
-        c = QtGui.QColor( *rgb_values )                
+        qp.setPen( QtGui.QColor(0,0,0) )        
         qp.setBrush( c  )
         
         qp.drawRect(visux,
@@ -173,64 +168,58 @@ class MyGrid(QtWidgets.QWidget):
         # how large can we visualize one grid cell?
         self.gridcellvisu_height = h // self.grid_height
         self.gridcellvisu_width  = w // self.grid_width        
-
+      
+        
         # draw all grid cells
         for cell_y in range(0, self.grid_height):
             for cell_x in range(0, self.grid_width):
-
-                # what is the current state of this cell?
-                celltype = self.grid[cell_y, cell_x]
 
                 # compute left top corner (x,y) of
                 # drawing rectangle
                 visu_x = cell_x * self.gridcellvisu_width
                 visu_y = cell_y * self.gridcellvisu_height
 
-                self.draw_cell(qp, visu_x, visu_y, celltype)
+                                
+                grid_cell_type = self.grid[ cell_y, cell_x ]                    
 
+                # determine grid cell color
+                rgb_values = (255,255,255)
 
-        # highlight start cell?
-        if self.start != None:
-            visu_x = self.start[0] * self.gridcellvisu_width
-            visu_y = self.start[1] * self.gridcellvisu_height
-            self.draw_cell(qp, visu_x, visu_y, cell_types.celltype_start)
+                # is there already an A* algorithm instance?
+                if self.node_infos_from_astar_algorithm != None:
+                    node_infos = self.node_infos_from_astar_algorithm[(cell_x,cell_y)]
+                    astar_node_type = node_infos["node_type"]                    
+                    if astar_node_type == astar_node_types.nodetype_open:
+                        rgb_values = (0,255,0)
+                    if astar_node_type == astar_node_types.nodetype_closed:
+                        rgb_values = (200,200,200)
 
-        # highlight goal cell?
-        if self.goal != None:
-            visu_x = self.goal[0] * self.gridcellvisu_width
-            visu_y = self.goal[1] * self.gridcellvisu_height
-            self.draw_cell(qp, visu_x, visu_y, cell_types.celltype_goal)
+                if (cell_x, cell_y) == self.start:
+                    rgb_values = (255,0,0)
+                if (cell_x, cell_y) == self.goal:
+                    rgb_values = (100,100,255)
+                if grid_cell_type == cell_types.celltype_wall:
+                    rgb_values = (128,128,128)
+                
+                c = QtGui.QColor( *rgb_values )
+                self.draw_cell(qp, visu_x, visu_y, c)
+                
+                
+                qp.drawText(visu_x+self.gridcellvisu_width//3,
+                            visu_y+self.gridcellvisu_height//3 - 15,
+                            f"({cell_x},{cell_y})")
 
-
-        # overlay grid cells with node information
-        # returned from last iteration step from A* algorithm?
-        if self.node_infos_from_astar_algorithm != None:
-
-             # draw all grid cells
-            for cell_y in range(0, self.grid_height):
-                for cell_x in range(0, self.grid_width):
-
-                    # compute left top corner (x,y) of
-                    # drawing rectangle
-                    visu_x = cell_x * self.gridcellvisu_width
-                    visu_y = cell_y * self.gridcellvisu_height
-
-                    cell_infos = self.node_infos_from_astar_algorithm[(cell_x,cell_y)]
-
-                    costs_f = cell_infos["f"]
-                    costs_g = cell_infos["g"]
-                    costs_h = cell_infos["h"]
-
-                    qp.drawText(visu_x+self.gridcellvisu_width//3,
-                                visu_y+self.gridcellvisu_height//3 - 15,
-                                f"({cell_x},{cell_y})")
-
+                
+                if self.node_infos_from_astar_algorithm != None:
+                    costs_f = node_infos["f"]
+                    costs_g = node_infos["g"]
+                    costs_h = node_infos["h"]
                     qp.drawText(visu_x+self.gridcellvisu_width//3,
                                 visu_y+self.gridcellvisu_height//3,
-                                "g+h=f")
+                                "f=g+h")
                     qp.drawText(visu_x+self.gridcellvisu_width//3,
                                 visu_y+self.gridcellvisu_height//3 + 15,
-                                f"{costs_g}+{costs_h}={costs_f}")
+                                f"{costs_f}={costs_g}+{costs_h}")
 
 
 

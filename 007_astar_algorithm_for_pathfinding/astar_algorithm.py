@@ -6,6 +6,7 @@
 
 import numpy
 import cell_types
+import astar_node_types
 
 class astar:
 
@@ -53,11 +54,18 @@ class astar:
                     {"g": g_costs,
                      "h": h_costs,
                      "f": f_costs,
-                     "came_from" : None,                     
+                     "came_from" : None,
+                     "node_type" : astar_node_types.nodetype_unknown                     
                      }
 
-        # put the start node into the open list of nodes to expand
-        self.openlist = [self.start]
+        # put the start node into the open set
+        # this is the set of nodes to expand
+        self.openset = { self.start }
+        self.node_infos[ self.start ]["node_type"] = astar_node_types.nodetype_open
+
+        # we also maintain a list of nodes that
+        # we have already expanded
+        self.closedset = set()
 
         # the following list of offset coordinates (dx,dy)
         # defines what the neighbors of a node are
@@ -72,8 +80,38 @@ class astar:
         dy = nodeA[1] - nodeB[1]
         dist = int(numpy.sqrt(dx**2 + dy**2) * 10)
         return dist    
-                
 
+
+
+    def get_node_with_smallest_f_costs(self):
+        
+        min_f_costs_found_so_far = None
+        node_with_smallest_f_costs = None
+
+        # for all open nodes:
+        # find the one with the smallest f costs
+        for node in self.openset:
+
+            # just take the first node, if we have no
+            # node to expand so far
+            if node_with_smallest_f_costs == None:
+                node_with_smallest_f_costs = node
+                min_f_costs_found_so_far = self.node_infos[node]["f"]
+                continue
+
+            # what are the f-costs for this node?
+            f_costs = self.node_infos[node]["f"]
+
+            # did we find a better node?
+            if f_costs < min_f_costs_found_so_far:
+                min_f_costs_found_so_far = f_costs
+                node_with_smallest_f_costs = node
+
+        # return the node that is in the open set
+        # and has the smallest f-costs
+        return node_with_smallest_f_costs
+        
+    
 
     def get_neighbors(self, node):
         
@@ -110,46 +148,88 @@ class astar:
         print("single A* step")
 
         # 1. are there still nodes to expand?
-        if len(self.openlist) == 0:
+        if len(self.openset) == 0:
             print("Sorry! No more nodes to expand!")
             return self.node_infos
         
 
-        # 2. search for the node in the open list
+        # 2. search for the node in the open set
         #    that has the smallest f-costs
-        min_f_costs_found_so_far = None
-        node_with_smallest_f_costs = None
-        for node in self.openlist:
-
-            # just take the first node, if we have no
-            # node to expand so far
-            if node_with_smallest_f_costs == None:
-                node_with_smallest_f_costs = node
-                min_f_costs_found_so_far = self.node_infos[node]["f"]
-                continue
-
-            # what are the f-costs for this node?
-            f_costs = self.node_infos[node]["f"]
-
-            # did we find a better node?
-            if f_costs < min_f_costs_found_so_far:
-                min_f_costs_found_so_far = f_costs
-                node_with_smallest_f_costs = node
-        
-        print("Best node to expand is: ", node_with_smallest_f_costs )        
+        node_to_expand = self.get_node_with_smallest_f_costs()
+        print("Best node to expand is", node_to_expand)
 
 
-        # 3. now that we have decided for a node to expand,
-        #    expand it!
-        node_to_expand = node_with_smallest_f_costs
+        # 3. remove the node from the open set
+        self.openset.remove( node_to_expand )
+
+
+        # 4. put the node in to list of nodes
+        #    that we have already expanded
+        self.closedset.add( node_to_expand )
+        self.node_infos[ node_to_expand ]["node_type"] = \
+            astar_node_types.nodetype_closed
+
+
+        # 5. now "expand" the node!
+        #    i.e. compute tentative g-costs for these nodes
+        #         and update f-costs
         neighbors = self.get_neighbors( node_to_expand )
         for neighbor in neighbors:
-            print(neighbor)
-             
 
-               
+            #print(neighbor)
 
-        
+            # 5.1
+            # if this neighbor has been expanded already
+            # before, i.e. is already in the closed set,
+            # do nothing
+            if neighbor in self.closedset:
+                continue
+            
+            # 5.2
+            # what are the costs to go from the start node
+            # to the current node to be expanded?
+            gcosts_node_to_expand = self.node_infos[ node_to_expand ]["g"]
+
+
+            # 5.3
+            # compute a new estimate for the g-costs of this node 'neighbor'
+            # why are theses costs 'tentative'?
+            # well, perhaps we find a short path to 'neighbor' from the
+            # start node in the future!
+            tentative_gcosts_for_neighbor = gcosts_node_to_expand + self.heuristic(node_to_expand, neighbor)
+
+
+            # 5.4
+            # how long was the best path from the start node
+            # to the 'neighbor' node that we knew so far?
+            old_known_gcosts_for_neighbor = self.node_infos[ neighbor ]["g"]
+
+
+            # 5.5
+            # so: did we find a better path to node 'neighbor'?
+            if tentative_gcosts_for_neighbor < old_known_gcosts_for_neighbor:
+
+                # yes! we did!
+
+                # so a better way to node 'neighbor' is to go there
+                # from node 'node_to_expand'
+                self.node_infos[ neighbor ][ "came_from" ] = node_to_expand
+
+                # update g-costs for node 'neighbor'
+                self.node_infos[ neighbor ][ "g" ] = tentative_gcosts_for_neighbor
+
+                # if the g-costs are smaller, the f-costs (overall costs to go from 
+                # start to goal) are also, since f:=g+h
+                self.node_infos[ neighbor ][ "f" ] = tentative_gcosts_for_neighbor + \
+                                                     self.node_infos[ neighbor ][ "h" ]
+                
+                # add this node 'neighbor' to the open set
+                # since we need to expand this node
+                # in the future as well if it promises a
+                # short path from the start to the goal node                
+                self.openset.add( neighbor )
+                self.node_infos[ neighbor ]["node_type"] = \
+                    astar_node_types.nodetype_open
 
         return self.node_infos
 
