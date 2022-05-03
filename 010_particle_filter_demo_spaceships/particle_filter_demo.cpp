@@ -588,21 +588,7 @@ int main()
     }
 
 
-    // 8. visualize spaceship and
-    //    all measurements by yellow circles
-
-    // draw alien spaceship into image?
-    if (show_space_ship)
-      alien_spaceship.draw_yourself_into_this_image( image );
-
-    for (unsigned int i = 0; i < measurements.size(); i++)
-    {
-      Point p((int) measurements[i].at<float>(0,0), (int) measurements[i].at<float>(1,0));
-      circle(image, p, 5, CV_RGB(255,255,0), -1);
-    }
-
-
-    // 9. wait for user input
+    // 8. wait for user input
     int c;
     if (STEP_BY_STEP)
       c = waitKey(0);
@@ -610,9 +596,30 @@ int main()
       c = waitKey(1);
     if (c == 'x') // eXit particle filter demo?
       break;
-        
 
-    // 10. do one particle filter update step
+
+    // 9. user wants to turn on/off visualization of alien space ship
+    if (c=='s')
+    {
+      std::cout << "Turn on/off spaceship visu" << std::endl;
+      show_space_ship = !show_space_ship;
+    }
+
+    
+    // 10. draw alien spaceship into image?
+    if (show_space_ship)
+      alien_spaceship.draw_yourself_into_this_image( image );
+
+
+    // 11. visualize all measurements by yellow circles
+    for (unsigned int i = 0; i < measurements.size(); i++)
+    {
+      Point p((int) measurements[i].at<float>(0,0), (int) measurements[i].at<float>(1,0));
+      circle(image, p, 5, CV_RGB(255,255,0), -1);
+    }
+
+
+    // 12. do one particle filter update step
     int time_needed = 0;
     if (my_pf != NULL)
     {
@@ -623,38 +630,38 @@ int main()
     }
 
 
-    // 11. if the user wants to track the spaceship,
+    // 13. if the user wants to track the spaceship,
     //     we initialize a particle filter
     if (c == 't')
     {
       std::cout << "Starting tracking spaceship using particle filter..." << std::endl;
 
-      // 11.1 if there is already a particle filter object,
+      // 13.1 if there is already a particle filter object,
       //      delete it
       if (my_pf != NULL)
         delete my_pf;
 
-      // 11.2 generate new particle filter object
+      // 13.2 generate new particle filter object
       my_pf = new particle_filter(POPULATION_SIZE, 4);
 
-      // 11.3 initialize particle filter:
+      // 13.3 initialize particle filter:
 
-      // 11.4 set state space dimensions
+      // 13.4 set state space dimensions
       my_pf->set_param_ranges(0, 0.0f, (float)image.cols); // x-position
       my_pf->set_param_ranges(1, 0.0f, (float)image.rows); // y-position
       my_pf->set_param_ranges(2, -1.0f, 1.0f);             // velocity x (vx)
       my_pf->set_param_ranges(3, -1.0f, 1.0f);             // velocity y (vy)
 
-      // 11.5 set motion & measurement model			
+      // 13.5 set motion & measurement model			
       my_pf->set_prediction_model((particle_filter_update_model*)my_update_by_prediction_model);
       my_pf->set_perception_model((particle_filter_update_model*)my_update_by_measurement_model);
 
-      // 11.6 start with random positions in state space and uniform weight distribution
+      // 13.6 start with random positions in state space and uniform weight distribution
       my_pf->reset_positions_and_weights();
     }
 
 
-    // 12. visualize all particle locations
+    // 14. visualize all particle locations
     if (my_pf != NULL)
     {
       for (int i = 0; i < my_pf->population_size; i++)
@@ -673,7 +680,7 @@ int main()
     } // if (we currently track using the particle filter)
 
     
-    // 13. does the user want to generate a continous probability image based
+    // 15. does the user want to generate a continous probability image based
     //     on the discrete particle positions?
     if (c == 'p')
         if (my_pf != NULL)
@@ -683,7 +690,7 @@ int main()
         }
 
 
-    // 14. user wants to cluster the particle population
+    // 16. user wants to cluster the particle population
     if ((c == 'c') || (ALWAYS_CLUSTER_PARTICLES))
         if (my_pf != NULL)
         {
@@ -700,16 +707,9 @@ int main()
         } // if (user wants to cluster particle population)
 
 
+       
 
-    // 15. user wants to turn on/off visualization of alien space ship
-    if (c=='s')
-    {
-      show_space_ship = !show_space_ship;
-    }
-
-   
-
-    // 16. show visualization image
+    // 17. show visualization image
     char txt[500];
     sprintf(txt, "%04d (%d ms)", simulation_step, time_needed);
     putText(image, txt, Point(image.cols-120, image.rows-10),
@@ -717,7 +717,7 @@ int main()
     imshow("Tracking an alien spaceship with a particle filter!", image);
 
 
-    // 17. time goes by...
+    // 18. time goes by...
     simulation_step++;
 
   } // while

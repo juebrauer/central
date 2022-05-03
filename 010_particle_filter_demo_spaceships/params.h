@@ -69,7 +69,7 @@
 
 // how many of these "completely wrong measurements"
 // to add?
-#define NR_OF_COMPLETELY_WRONG_MEASUREMENTS 5
+#define NR_OF_COMPLETELY_WRONG_MEASUREMENTS 10
 
 
 // how many particles do we want to use to model
