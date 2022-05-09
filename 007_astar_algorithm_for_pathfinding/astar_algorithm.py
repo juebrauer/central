@@ -12,7 +12,9 @@ class astar:
 
     def __init__(self, map, start, goal):
 
-        print("Creating A* algorithm object")
+        print("Creating A* algorithm object.")
+        print("Costs are: f=g+h")
+        print("           total estimated costs = costs so far to reach the cell + heuristic costs")
 
         self.map   = map
         self.start = start
@@ -140,7 +142,24 @@ class astar:
             neighbors.append( (other_x, other_y) )
 
         return neighbors
-        
+
+
+    def reconstruct_path(self):
+
+        current = self.goal
+        path = [current]
+
+        while current != self.start:            
+            # how did we get to node "current"?
+            current = self.node_infos[current]["came_from"]
+            path.insert(0, current)
+
+        print("Path: ", end="")
+        for node in path:
+            print( node, end=" ")
+            self.node_infos[node]["node_type"] = astar_node_types.nodetype_path
+        print("")
+
 
 
     def single_step(self):
@@ -156,21 +175,29 @@ class astar:
         # 2. search for the node in the open set
         #    that has the smallest f-costs
         node_to_expand = self.get_node_with_smallest_f_costs()
-        print("Best node to expand is", node_to_expand)
+        estimated_costs = self.node_infos[node_to_expand]["f"]
+        print( f"Best node to explore/expand is {node_to_expand}  with estimated path costs of {estimated_costs}")
 
 
-        # 3. remove the node from the open set
+        # 3. is the considered node_to_expand the goal node?
+        if node_to_expand == self.goal:
+            print("FOUND A PATH TO THE GOAL!")
+            self.reconstruct_path()
+            return self.node_infos 
+            
+
+        # 4. remove the node from the open set
         self.openset.remove( node_to_expand )
 
 
-        # 4. put the node in to list of nodes
+        # 5. put the node in to list of nodes
         #    that we have already expanded
         self.closedset.add( node_to_expand )
         self.node_infos[ node_to_expand ]["node_type"] = \
             astar_node_types.nodetype_closed
 
 
-        # 5. now "expand" the node!
+        # 6. now "expand" the node!
         #    i.e. compute tentative g-costs for these nodes
         #         and update f-costs
         neighbors = self.get_neighbors( node_to_expand )
@@ -178,20 +205,20 @@ class astar:
 
             #print(neighbor)
 
-            # 5.1
+            # 6.1
             # if this neighbor has been expanded already
             # before, i.e. is already in the closed set,
             # do nothing
             if neighbor in self.closedset:
                 continue
             
-            # 5.2
+            # 6.2
             # what are the costs to go from the start node
             # to the current node to be expanded?
             gcosts_node_to_expand = self.node_infos[ node_to_expand ]["g"]
 
 
-            # 5.3
+            # 6.3
             # compute a new estimate for the g-costs of this node 'neighbor'
             # why are theses costs 'tentative'?
             # well, perhaps we find a short path to 'neighbor' from the
@@ -199,13 +226,13 @@ class astar:
             tentative_gcosts_for_neighbor = gcosts_node_to_expand + self.heuristic(node_to_expand, neighbor)
 
 
-            # 5.4
+            # 6.4
             # how long was the best path from the start node
             # to the 'neighbor' node that we knew so far?
             old_known_gcosts_for_neighbor = self.node_infos[ neighbor ]["g"]
 
 
-            # 5.5
+            # 6.5
             # so: did we find a better path to node 'neighbor'?
             if tentative_gcosts_for_neighbor < old_known_gcosts_for_neighbor:
 

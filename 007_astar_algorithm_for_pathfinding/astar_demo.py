@@ -42,7 +42,6 @@ class MyGrid(QtWidgets.QWidget):
         self.start = None
         self.goal  = None
         self.astar_algorithm = None
-        self.node_infos_from_astar_algorithm = None
 
         self.setMouseTracking(True)
 
@@ -132,6 +131,11 @@ class MyGrid(QtWidgets.QWidget):
             if self.start != None and self.goal != None:
                 # run a single A* iteration
                 self.node_infos_from_astar_algorithm = self.astar_algorithm.single_step()
+
+        # clear old path search and restart?
+        if c=="C":
+            print("Clearing old path search. Restarting A* algorithm.")
+            self.initialize_or_reinitialize_astar_algorithm()
         
         # induce re-drawing of the widget
         self.update()
@@ -186,49 +190,44 @@ class MyGrid(QtWidgets.QWidget):
                 rgb_values = (255,255,255)
 
                 # is there already an A* algorithm instance?
-                if self.node_infos_from_astar_algorithm != None:
-                    node_infos = self.node_infos_from_astar_algorithm[(cell_x,cell_y)]
+                if self.astar_algorithm != None:
+                    node_infos = self.astar_algorithm.node_infos[(cell_x,cell_y)]
                     astar_node_type = node_infos["node_type"]                    
                     if astar_node_type == astar_node_types.nodetype_open:
-                        rgb_values = (0,255,0)
+                        rgb_values = (0,255,0) # green
                     if astar_node_type == astar_node_types.nodetype_closed:
-                        rgb_values = (200,200,200)
+                        rgb_values = (200,200,200) # light gray
+                    if astar_node_type == astar_node_types.nodetype_path:
+                        rgb_values = (255,255,0) # yellow
 
                 if (cell_x, cell_y) == self.start:
-                    rgb_values = (255,0,0)
+                    rgb_values = (255,0,0) # red
                 if (cell_x, cell_y) == self.goal:
-                    rgb_values = (100,100,255)
+                    rgb_values = (100,100,255) # light blue
                 if grid_cell_type == cell_types.celltype_wall:
-                    rgb_values = (128,128,128)
+                    rgb_values = (128,128,128) # dark gray
                 
                 c = QtGui.QColor( *rgb_values )
                 self.draw_cell(qp, visu_x, visu_y, c)
                 
                 
                 qp.drawText(visu_x+self.gridcellvisu_width//3,
-                            visu_y+self.gridcellvisu_height//3 - 15,
+                            visu_y+self.gridcellvisu_height//3 - 10,
                             f"({cell_x},{cell_y})")
 
                 
-                if self.node_infos_from_astar_algorithm != None:
+                if self.astar_algorithm != None:
+                    node_infos = self.astar_algorithm.node_infos[(cell_x,cell_y)]
                     costs_f = node_infos["f"]
                     costs_g = node_infos["g"]
                     costs_h = node_infos["h"]
+                    #qp.drawText(visu_x+self.gridcellvisu_width//3,
+                    #            visu_y+self.gridcellvisu_height//3,
+                    #            "f=g+h")
                     qp.drawText(visu_x+self.gridcellvisu_width//3,
-                                visu_y+self.gridcellvisu_height//3,
-                                "f=g+h")
-                    qp.drawText(visu_x+self.gridcellvisu_width//3,
-                                visu_y+self.gridcellvisu_height//3 + 15,
+                                visu_y+self.gridcellvisu_height//3 + 5,
                                 f"{costs_f}={costs_g}+{costs_h}")
 
-
-
-
-
-
-
-     
-            
 
 app = QtWidgets.QApplication([])
 widget = MyGrid(grid_height=10, grid_width=6)
