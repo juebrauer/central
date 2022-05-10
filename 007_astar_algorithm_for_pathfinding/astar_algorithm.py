@@ -16,6 +16,7 @@ class astar:
         print("Costs are: f=g+h")
         print("           total estimated costs = costs so far to reach the cell + heuristic costs")
 
+        self.step  = 0
         self.map   = map
         self.start = start
         self.goal  = goal
@@ -164,11 +165,13 @@ class astar:
 
     def single_step(self):
 
-        print("single A* step")
+        print("\n\n\n\n---")
+        print( f"A* iteration step #{self.step}" )
 
         # 1. are there still nodes to expand?
         if len(self.openset) == 0:
             print("Sorry! No more nodes to expand!")
+            print("This can only mean: there is no path from start to goal node!")
             return self.node_infos
         
 
@@ -257,6 +260,18 @@ class astar:
                 self.openset.add( neighbor )
                 self.node_infos[ neighbor ]["node_type"] = \
                     astar_node_types.nodetype_open
+
+        print("Open set (set of nodes yet to explore):")
+        for node in self.openset:
+            print(node, end=" ")
+        print()
+
+        print("Closed set (set of nodes already explored):")
+        for node in self.closedset:
+            print(node, end=" ")
+        print()
+
+        self.step += 1
 
         return self.node_infos
 

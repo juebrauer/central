@@ -171,7 +171,16 @@ class MyGrid(QtWidgets.QWidget):
                 
         # how large can we visualize one grid cell?
         self.gridcellvisu_height = h // self.grid_height
-        self.gridcellvisu_width  = w // self.grid_width        
+        self.gridcellvisu_width  = w // self.grid_width
+
+        # prepare font
+        font = QtGui.QFont()
+        font.setFamily("Ubuntu")
+        font.setPixelSize(17)
+        font.setBold(False)
+        pen = QtGui.QPen( QtGui.QColor(0,0,0) )
+        qp.setPen(pen)
+        qp.setFont(font)      
       
         
         # draw all grid cells
@@ -209,28 +218,51 @@ class MyGrid(QtWidgets.QWidget):
                 
                 c = QtGui.QColor( *rgb_values )
                 self.draw_cell(qp, visu_x, visu_y, c)
-                
-                
-                qp.drawText(visu_x+self.gridcellvisu_width//3,
-                            visu_y+self.gridcellvisu_height//3 - 10,
-                            f"({cell_x},{cell_y})")
 
+                # if there is enough space,
+                # display grid cell coordinates
+                # and f,g,h costs                
+                if self.gridcellvisu_width>=60 and \
+                   self.gridcellvisu_height>=60:
                 
-                if self.astar_algorithm != None:
-                    node_infos = self.astar_algorithm.node_infos[(cell_x,cell_y)]
-                    costs_f = node_infos["f"]
-                    costs_g = node_infos["g"]
-                    costs_h = node_infos["h"]
-                    #qp.drawText(visu_x+self.gridcellvisu_width//3,
-                    #            visu_y+self.gridcellvisu_height//3,
-                    #            "f=g+h")
-                    qp.drawText(visu_x+self.gridcellvisu_width//3,
-                                visu_y+self.gridcellvisu_height//3 + 5,
-                                f"{costs_f}={costs_g}+{costs_h}")
+                    qp.drawText(visu_x+self.gridcellvisu_width//3 - 20,
+                                visu_y+self.gridcellvisu_height//3,
+                                f"({cell_x},{cell_y})")
 
+                    
+                    if self.astar_algorithm != None:
+                        node_infos = self.astar_algorithm.node_infos[(cell_x,cell_y)]
+                        costs_f = node_infos["f"]
+                        costs_g = node_infos["g"]
+                        costs_h = node_infos["h"]                    
+                        qp.drawText(visu_x+self.gridcellvisu_width//3 - 20,
+                                    visu_y+self.gridcellvisu_height//3 + 20,
+                                    f"{costs_f}={costs_g}+{costs_h}")
+
+
+manual = \
+"""
+A* demo by Prof. Dr. Juergen Brauer, www.juergenbrauer.org
+
+Press
+  s: to set start node
+  g: to set goal node
+  r: to run a single A* iteration
+  c: to restart the A* algorithm
+
+In the code, change grid_height and grid_width in order
+to make the grid larger or smaller.
+
+If the display size for a grid cell is large -
+which is the case for small  grid sizes -
+the demo also displays the cell coordinates and
+the f=g+h costs in each cell.
+"""
+
+print(manual)
 
 app = QtWidgets.QApplication([])
-widget = MyGrid(grid_height=10, grid_width=6)
-widget.resize(800, 800)
+widget = MyGrid(grid_height=10, grid_width=10)
+widget.resize(1000, 1000)
 widget.show()
 sys.exit(app.exec())
