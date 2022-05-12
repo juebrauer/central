@@ -282,7 +282,7 @@ Mat get_image_of_continuous_probability_distribution(particle_filter* pf)
             prob += p->weight * kernel_value;
 
          } // for (particle_nr)
-         prob /= W * bandwidth;
+         prob /= W * bandwidth * (float)N;
 
          // 5.2 later we need to know the max probability found
          //     in order to normalize the values for drawing a heat map
