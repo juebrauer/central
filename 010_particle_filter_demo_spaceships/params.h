@@ -113,7 +113,7 @@
 
 // speed-up computation of continuous density
 // using a LUT (look-up table) for exp() function values
-#define USE_LUT_FOR_EXP false
+#define USE_LUT_FOR_EXP false // note! does not work with KDE bandwidths < 1
 
 // speed-up computation of continuous density
 // function by computing density only at each n-th position

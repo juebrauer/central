@@ -207,8 +207,13 @@ Mat get_image_of_continuous_probability_distribution(particle_filter* pf)
 
    clock_t start_time = clock();
 
-   const double sigma = 10.0; // 1,10,20
-   const double normalization_fac = 1.0 / (sqrt(2 * M_PI) * sigma);
+   // width of Gaussian Kernel
+   const float sigma = 10.0; // try 1,10,20
+
+   // bandwidth of Kernel Density Estimator (KDE)
+   const float bandwidth = 1.0; // try 0.1, 1.0, 10.0
+
+   const float normalization_fac = 1.0 / (sqrt(2 * M_PI) * sigma);   
 
 
    // 1. prepare visualization image
@@ -225,7 +230,7 @@ Mat get_image_of_continuous_probability_distribution(particle_filter* pf)
        int len_of_diagonal = (int)sqrt(w*w + h*h);
        for (int d = 0; d < len_of_diagonal; d++)
        {
-           LUT_EXP[d] = (float)(normalization_fac * exp(-(double)(d*d) / (2.0*sigma*sigma)));
+           LUT_EXP[d] = (float)(normalization_fac * exp((-d*d) / (2.0*sigma*sigma)));
        }       
    }
 
@@ -262,12 +267,12 @@ Mat get_image_of_continuous_probability_distribution(particle_filter* pf)
             // compute Eculidean distance between particle pos & (x,y) pos
             float dx = p->state[0] - (float)x;
             float dy = p->state[1] - (float)y;
-            float d = sqrt(dx*dx + dy*dy);
-
+            float d = sqrt(dx*dx + dy*dy) / bandwidth;
+            
             // get Kernel value K(d)   
             float kernel_value;
             if (!USE_LUT_FOR_EXP)
-                kernel_value = (float)(normalization_fac * exp(-d*d / (2.0*sigma*sigma)));
+                kernel_value = (float)(normalization_fac * exp((-d*d) / (2.0*sigma*sigma)));
             else
             {
                 kernel_value = LUT_EXP[(int)d];
@@ -277,7 +282,7 @@ Mat get_image_of_continuous_probability_distribution(particle_filter* pf)
             prob += p->weight * kernel_value;
 
          } // for (particle_nr)
-         prob /= W;
+         prob /= W * bandwidth;
 
          // 5.2 later we need to know the max probability found
          //     in order to normalize the values for drawing a heat map
@@ -697,7 +702,7 @@ int main()
             // compute clusters
             vector<Point2d> clusters = cluster( my_pf->all_particles );
 
-            // show cluster centers as yellow circles
+            // show cluster centers as blue circles
             for (unsigned int i = 0; i < clusters.size(); i++)
             {
                 circle(image, clusters[i],
