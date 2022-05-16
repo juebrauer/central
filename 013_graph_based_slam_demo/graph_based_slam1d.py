@@ -101,6 +101,13 @@ def get_H_b(odom, obs):
         z2 = obs[t2]
 
         # adding virtual measurement constraint
+
+        # landmark should be due to time step t1 at x1+z1
+        # landmark should be due to time step t2 at x2+z2
+        # so (x2+z2)-(x1+z1)=x2-x1-z1+z2 should be zero
+        # to minimize this difference, we will compute an offset
+        # dx=H^{-1} @ b
+        # note: @ is equivalent to np.matmul()
         measure_constraints[(t1,t2)] = (x2-x1-z1+z2)
         omegas[(t1,t2)] = (1 / (2*Q))
 
@@ -136,7 +143,7 @@ for i in range(5):
     # note: odom is already a 3D vector (3 time steps)
     odom += dx
     # repeat till convergence
-    
+
 print("Odometry values after optimzation: \n", odom)
 
 plt.figure()
