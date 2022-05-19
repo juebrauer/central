@@ -139,12 +139,14 @@ class MyVisualization(QtWidgets.QWidget):
         font.setBold(False)
         qp.setFont(font)
 
+        # 1. 
         # first draw map of the world
         # and then everything else on top
         # of this image
         qp.drawImage(0,0, self.map)
 
 
+        # 2. draw start location - if already defined
         if self.location_start != None:
             col = QtGui.QColor(255,0,0)
             pen = QtGui.QPen( col )
@@ -154,6 +156,7 @@ class MyVisualization(QtWidgets.QWidget):
             r = params.VISU_LOCATION_START_RADIUS
             qp.drawEllipse( QtCore.QPoint(*self.location_start), r, r)
 
+        # 3. draw goal location - if already defined
         if self.location_goal != None:
             col = QtGui.QColor(0,0,255)
             pen = QtGui.QPen( col )
@@ -162,6 +165,9 @@ class MyVisualization(QtWidgets.QWidget):
             qp.setBrush(brush)
             r = params.VISU_LOCATION_GOAL_RADIUS
             qp.drawEllipse( QtCore.QPoint(*self.location_goal), r, r)
+
+        # 4. draw the tree
+        
         
     # end-def draw_all
 
