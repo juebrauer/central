@@ -57,10 +57,16 @@ class MyVisualization(QtWidgets.QWidget):
         self.mousex = pos.x()
         self.mousey = pos.y()
         
-        # show infos
-        self.setWindowTitle( f"mouse: ({self.mousex},{self.mousey})" )
+        self.show_window_title()
 
 
+    def show_window_title(self):
+
+        txt = f"mouse: ({self.mousex},{self.mousey})"
+        if self.rrt_algorithm != None:
+            txt += f" - RRT step #{self.rrt_algorithm.step}," \
+                   f" nodes: {len(self.rrt_algorithm.tree.nodes)}"
+            self.setWindowTitle( txt )
   
 
     def react(self, event):
@@ -91,8 +97,7 @@ class MyVisualization(QtWidgets.QWidget):
             print("Before running RRT, you have to define the goal location!")
             return
 
-        if self.rrt_algorithm == None:
-            self.rrt_algorithm = rrt(map, start, goal)
+        self.rrt_algorithm = rrt(map, start, goal)
 
 
 
@@ -104,21 +109,42 @@ class MyVisualization(QtWidgets.QWidget):
         except:
             pass
 
-        # run a single DBSCAN step
+        # run a single RRT step
         if c=="R":
 
-            self.try_to_init_rrt_algorithm(self.map, self.location_start, self.location_goal)
+            if self.rrt_algorithm == None:
+                self.try_to_init_rrt_algorithm(self.map,
+                                            self.location_start,
+                                            self.location_goal)
 
             if self.rrt_algorithm != None:
-                self.graph = self.rrt_algorithm.run_single_step()
+                self.rrt_algorithm.run_single_step()
+
+
+        # run several RRT steps
+        if c=="T":
+
+            if self.rrt_algorithm == None:
+                self.try_to_init_rrt_algorithm(self.map,
+                                            self.location_start,
+                                            self.location_goal)
+
+            if self.rrt_algorithm != None:
+                for i in range(params.DEMO_RUN_N_STEPS):
+                    self.rrt_algorithm.run_single_step()
+
 
 
         # clear, i.e. re-initialize, algorithm?
         if c=="C":
+            print("clear")
 
-            self.try_to_init_rrt_algorithm(self.map, self.location_start, self.location_goal)
+            self.try_to_init_rrt_algorithm(self.map,
+                                           self.location_start,
+                                           self.location_goal)
         
         # induce re-drawing of the widget
+        self.show_window_title()
         self.update()
 
     
@@ -148,7 +174,7 @@ class MyVisualization(QtWidgets.QWidget):
 
         # 2. draw start location - if already defined
         if self.location_start != None:
-            col = QtGui.QColor(255,0,0)
+            col = QtGui.QColor(*params.VISU_COLOR_LOCATION_START)
             pen = QtGui.QPen( col )
             qp.setPen(pen)
             brush = QtGui.QBrush( col )
@@ -158,7 +184,7 @@ class MyVisualization(QtWidgets.QWidget):
 
         # 3. draw goal location - if already defined
         if self.location_goal != None:
-            col = QtGui.QColor(0,0,255)
+            col = QtGui.QColor(*params.VISU_COLOR_LOCATION_GOAL)
             pen = QtGui.QPen( col )
             qp.setPen(pen)
             brush = QtGui.QBrush( col )
@@ -166,9 +192,60 @@ class MyVisualization(QtWidgets.QWidget):
             r = params.VISU_LOCATION_GOAL_RADIUS
             qp.drawEllipse( QtCore.QPoint(*self.location_goal), r, r)
 
+            # draw termination circle around goal location
+            col = QtGui.QColor(*params.VISU_COLOR_TERMINATION_CIRCLE)
+            pen = QtGui.QPen( col )
+            qp.setPen(pen)
+            qp.setBrush(QtCore.Qt.NoBrush)            
+            r = params.ALGO_TERMINATION_RADIUS
+            qp.drawEllipse( QtCore.QPoint(*self.location_goal), r, r)
+
+
         # 4. draw the tree
-        
-        
+        if self.rrt_algorithm != None:
+
+            
+            r = params.VISU_NODE_RADIUS
+
+            for node in self.rrt_algorithm.tree.nodes:
+
+                # draw this node
+                col = QtGui.QColor(*params.VISU_COLOR_TREE_NODE)
+                pen = QtGui.QPen( col )
+                qp.setPen(pen)
+                brush = QtGui.QBrush( col )
+                qp.setBrush(brush)
+                qp.drawEllipse( QtCore.QPoint(node.x, node.y), r, r)              
+
+                # draw the edge to the parent node
+                if node.parent != None:
+
+                    col = QtGui.QColor(*params.VISU_COLOR_TREE_EDGE)
+                    pen = QtGui.QPen( col )
+                    qp.setPen(pen)
+                    brush = QtGui.QBrush( col )
+                    qp.setBrush(brush)
+
+                    qp.drawLine(node.x, node.y,
+                                node.parent.x, node.parent.y)
+
+
+            if self.rrt_algorithm.last_rnd_point != None:
+
+                p = self.rrt_algorithm.last_rnd_point
+
+                # draw last random point used in the RRT algorithm
+                # to augment the tree
+                col = QtGui.QColor(*params.VISU_COLOR_LAST_RANDOM_POINT)
+                pen = QtGui.QPen( col )
+                qp.setPen(pen)
+                brush = QtGui.QBrush( col )
+                qp.setBrush(brush)
+
+                r = params.VISU_LAST_RANDOM_POINT_RADIUS            
+                qp.drawEllipse( QtCore.QPoint(p[0],p[1]), r, r)
+
+            
     # end-def draw_all
 
 
@@ -187,6 +264,7 @@ Click
 
 Press
   r - to run a single RRT step
+  t - to run {params.DEMO_RUN_N_STEPS} RRT steps
   c - to clear, i.e. re-initialize, RRT algorithm
 """
 

@@ -6,7 +6,7 @@ import params
 
 class rrt:
 
-    def __init__(self, map, start, goal, incr_dist=10):
+    def __init__(self, map, start, goal):
         self.map = map
 
         # get a single pixel value
@@ -29,8 +29,9 @@ class rrt:
 
         self.step = 0
 
-        self.incr_dist = incr_dist
+        self.last_rnd_point = None
 
+        
 
     def get_random_location(self):
         rndx = numpy.random.randint(low=0, high=self.map_width-1)
@@ -62,22 +63,22 @@ class rrt:
         return nearest_node, min_dist
 
 
-    def compute_new_location_candidate(self, node, x,y, incr_dist):
+    def compute_new_location_candidate(self, node, x,y):
 
         # 1. compute vector from node to (x,y)
-        vecx = node.x - x
-        vecy = node.y - y
+        vecx = x - node.x
+        vecy = y - node.y
 
-        # 2. compute unit direction vector
+        # 2. compute unit direction vector (dirx,diry)
         len_vec = numpy.linalg.norm((vecx,vecy))
         dirx = vecx/len_vec
         diry = vecy/len_vec
 
         # 3. go from node into direction (dirx,diry)
         #    a distance of incr_dist
-        finalx = node.x + dirx*incr_dist
-        finaly = node.y + diry*incr_dist
-
+        finalx = node.x + dirx*params.ALGO_INCR_DIST
+        finaly = node.y + diry*params.ALGO_INCR_DIST
+        
         return finalx, finaly
 
 
@@ -87,21 +88,18 @@ class rrt:
         vecx = p2[0] - p1[0]
         vecy = p2[1] - p1[1]
 
-        # 2. compute unit direction vector
-        len_vec = numpy.linalg.norm((vecx,vecy))
-        dirx = vecx/len_vec
-        diry = vecy/len_vec
-
-        # 3. go step by step from p1 to p2 and check
+        # 2. go step by step from p1 to p2 and check
         #    whether intermediate points are walkable ("free")
         for r in numpy.linspace(0.0, 1.0, 100):
-            ix = int(p1[0] + r * dirx)
-            iy = int(p1[1] + r * diry)
+            ix = int(p1[0] + r * vecx)
+            iy = int(p1[1] + r * vecy)
 
             pixel_value = self.map.pixel(ix,iy)
             c = QtGui.QColor(pixel_value)
             
-            if (c.red(), c.green(), c.blue()) != params.COLOR_WALKABLE:
+            if (c.red(), c.green(), c.blue()) != params.ALGO_MAP_COLOR_WALKABLE:
+
+                #print("Found a not walkable intermediate pixel!")
 
                 # we found a not walkable intermediate pixel!
                 return False
@@ -114,12 +112,13 @@ class rrt:
             
 
     def run_single_step(self):
-        print("RRT single step")
+        #print("RRT single step")
 
         self.step += 1
 
         # 1. get random location
         rndx, rndy = self.get_random_location()
+        self.last_rnd_point = (rndx, rndy)
                         
         # 2. determine node that is next to this location
         nearest_node, dist = \
@@ -128,19 +127,31 @@ class rrt:
         # 3. compute new location candidate
         candx, candy = \
             self.compute_new_location_candidate(nearest_node,
-                                                rndx,rndy,
-                                                self.incr_dist)
+                                                rndx,rndy)
+
+        # 4. is the candidate location still in the map?
+        if candx<0 or candx>=self.map_width or \
+           candy<0 or candy>=self.map_height:
+           # No!
+           return self.tree
         
-        # 4. check whether the path from nearest_node to (candx,candy)
+        # 5. check whether the path from nearest_node to (candx,candy)
         #    is walkable
         if self.is_walkable( (nearest_node.x, nearest_node.y),
                              (candx, candy)):
-            n = nodes_and_trees.node(candx,candy, nearest_node)
+            n = nodes_and_trees.node(candx, candy, nearest_node)
             self.tree.nodes.append( n )
 
-        print( f"nr_nodes={len(self.tree.nodes)}" )
-
-        return self.tree       
+            # is the new node in the termination neighborhood
+            # of the goal node?
+            p1 = (n.x, n.y)
+            p2 = self.goal
+            dist = self.distance(p1,p2)
+            if dist <= params.ALGO_TERMINATION_RADIUS:
+                print("New node is in the termination radius to the goal node!")
+        
+        
+        return self.tree
 
 
 
