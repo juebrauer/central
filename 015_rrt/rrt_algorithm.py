@@ -31,6 +31,8 @@ class rrt:
 
         self.last_rnd_point = None
 
+        self.path_from_start_to_goal = None
+
         
 
     def get_random_location(self):
@@ -76,8 +78,8 @@ class rrt:
 
         # 3. go from node into direction (dirx,diry)
         #    a distance of incr_dist
-        finalx = node.x + dirx*params.ALGO_INCR_DIST
-        finaly = node.y + diry*params.ALGO_INCR_DIST
+        finalx = int(node.x + dirx*params.ALGO_INCR_DIST)
+        finaly = int(node.y + diry*params.ALGO_INCR_DIST)
         
         return finalx, finaly
 
@@ -108,6 +110,28 @@ class rrt:
         # have a color that is walkable (e.g., white)!
         # So the path from p1 to p2 is walkable.
         return True
+
+
+
+    def reconstruct_path(self, n):
+
+        path = []
+        loc = None
+
+        while loc != self.start:
+            loc = (n.x, n.y)
+            #print( f"{loc}", end=" " )
+
+            path.insert(0,loc)           
+
+            # go to parent node
+            n = n.parent
+
+        # last node is start node,
+        # insert start node as well
+        path.insert(0,loc)
+
+        return path
 
             
 
@@ -149,6 +173,8 @@ class rrt:
             dist = self.distance(p1,p2)
             if dist <= params.ALGO_TERMINATION_RADIUS:
                 print("New node is in the termination radius to the goal node!")
+
+                self.path_from_start_to_goal = self.reconstruct_path(n)
         
         
         return self.tree

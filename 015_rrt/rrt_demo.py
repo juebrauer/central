@@ -245,6 +245,43 @@ class MyVisualization(QtWidgets.QWidget):
                 r = params.VISU_LAST_RANDOM_POINT_RADIUS            
                 qp.drawEllipse( QtCore.QPoint(p[0],p[1]), r, r)
 
+
+            # did we already find a path?
+            if self.rrt_algorithm.path_from_start_to_goal != None:
+
+                last_loc = None
+
+                # yes, we did!
+                # draw that path!
+                for loc in self.rrt_algorithm.path_from_start_to_goal:
+
+                    # draw path node
+                    col = QtGui.QColor(*params.VISU_COLOR_FOUND_PATH_NODE)
+                    pen = QtGui.QPen( col )
+                    qp.setPen(pen)
+                    brush = QtGui.QBrush( col )
+                    qp.setBrush(brush)
+                    r = params.VISU_NODE_RADIUS
+                    qp.drawEllipse( QtCore.QPoint(loc[0],loc[1]), r, r)
+
+                    if last_loc != None:
+
+                        # draw path edge
+                        col = QtGui.QColor(*params.VISU_COLOR_FOUND_PATH_EDGE)
+                        pen = QtGui.QPen( col,
+                                          params.VISU_FOUND_PATH_WIDTH,
+                                          QtCore.Qt.DashLine )
+                        qp.setPen(pen)
+                        brush = QtGui.QBrush( col )
+                        qp.setBrush(brush)
+                        qp.drawLine(last_loc[0], last_loc[1],
+                                    loc[0], loc[1])
+
+                    last_loc = loc
+
+
+
+
             
     # end-def draw_all
 
@@ -265,7 +302,7 @@ Click
 Press
   r - to run a single RRT step
   t - to run {params.DEMO_RUN_N_STEPS} RRT steps
-  c - to clear, i.e. re-initialize, RRT algorithm
+  c - to clear the RRT tree, i.e. to restart RRT algorithm
 """
 
 print(manual)
