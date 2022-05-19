@@ -148,6 +148,15 @@ class rrt:
         nearest_node, dist = \
             self.get_nearest_node_and_distance_to_location(rndx,rndy)
 
+        # catch a special case:
+        # the random location was exactly
+        # placed on an existing node in the tree!
+        # then the direction vector is the null vector
+        # and "going into the direction" of the random
+        # location from the nearest node in the tree does not work!
+        if dist == 0:
+            return self.tree
+
         # 3. compute new location candidate
         candx, candy = \
             self.compute_new_location_candidate(nearest_node,

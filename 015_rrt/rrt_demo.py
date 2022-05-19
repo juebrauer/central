@@ -40,7 +40,7 @@ class MyVisualization(QtWidgets.QWidget):
 
         # load in the map (occupancy grid)
         # as an image
-        self.map = QtGui.QImage("world1.png")
+        self.map = QtGui.QImage( params.ALGO_WORLD_TO_USE )
        
 
 
@@ -71,10 +71,24 @@ class MyVisualization(QtWidgets.QWidget):
 
     def react(self, event):
         self.update_and_show_mouse_pos(event)
+
         if event.button() == QtCore.Qt.LeftButton:      
+                
             self.location_start = (self.mousex, self.mousey)
+
+            # start location has changed,
+            # so restart RRT algorithm
+            self.try_to_init_rrt_algorithm(restart=True)
+
+
+
         elif event.button() == QtCore.Qt.RightButton:
+
             self.location_goal = (self.mousex, self.mousey)
+
+            # goal location has changed,
+            # so restart RRT algorithm
+            self.try_to_init_rrt_algorithm(restart=True)
 
         # induce re-drawing of the widget
         self.update()
@@ -87,7 +101,10 @@ class MyVisualization(QtWidgets.QWidget):
         self.react(event)
 
 
-    def try_to_init_rrt_algorithm(self, map, start, goal):
+    def try_to_init_rrt_algorithm(self, restart=False):
+
+        if restart==False and self.rrt_algorithm != None:
+            return
 
         if self.location_start == None:
             print("Before running RRT, you have to define the start location!")
@@ -97,7 +114,10 @@ class MyVisualization(QtWidgets.QWidget):
             print("Before running RRT, you have to define the goal location!")
             return
 
-        self.rrt_algorithm = rrt(map, start, goal)
+        # generate an instance of the RRT algorithm
+        self.rrt_algorithm = rrt(self.map,
+                                 self.location_start,
+                                 self.location_goal)
 
 
 
@@ -112,10 +132,7 @@ class MyVisualization(QtWidgets.QWidget):
         # run a single RRT step
         if c=="R":
 
-            if self.rrt_algorithm == None:
-                self.try_to_init_rrt_algorithm(self.map,
-                                            self.location_start,
-                                            self.location_goal)
+            self.try_to_init_rrt_algorithm(restart=False)
 
             if self.rrt_algorithm != None:
                 self.rrt_algorithm.run_single_step()
@@ -124,10 +141,7 @@ class MyVisualization(QtWidgets.QWidget):
         # run several RRT steps
         if c=="T":
 
-            if self.rrt_algorithm == None:
-                self.try_to_init_rrt_algorithm(self.map,
-                                            self.location_start,
-                                            self.location_goal)
+            self.try_to_init_rrt_algorithm(restart=False)
 
             if self.rrt_algorithm != None:
                 for i in range(params.DEMO_RUN_N_STEPS):
@@ -139,9 +153,7 @@ class MyVisualization(QtWidgets.QWidget):
         if c=="C":
             print("clear")
 
-            self.try_to_init_rrt_algorithm(self.map,
-                                           self.location_start,
-                                           self.location_goal)
+            self.try_to_init_rrt_algorithm(restart=True)
         
         # induce re-drawing of the widget
         self.show_window_title()
