@@ -11,6 +11,9 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
+SHOW_EST_STATE_VECTOR = False
+SHOW_WHICH_LANDMARKS_ARE_CURRENTLY_DETECTED = True
+
 # EKF state covariance
 Cx = np.diag([0.5, 0.5, np.deg2rad(30.0)]) ** 2
 
@@ -28,7 +31,7 @@ SIM_TIME = 150.0
 
 # maximum observation range for landmarks
 # try 20, 15
-MAX_RANGE = 20.0 
+MAX_RANGE = 17.5 
 
 # threshold of Mahalanobis distance for data association.
 M_DIST_TH = 2.0  
@@ -64,8 +67,9 @@ def ekf_slam(xEst, PEst, u, z):
         if min_id == nLM:
             
             # yes! we have observed a new landmark!
-            print( f"\nNew landmark detected! {nLM} landmarks so far." )
-            print( f"State vector before: \n{xEst}" )
+            if SHOW_EST_STATE_VECTOR:
+                print( f"\nNew landmark detected! {nLM} landmarks so far." )
+                print( f"State vector before: \n{xEst}" )
 
             # extend state and covariance matrix
             # given the measurement matrix,
@@ -78,7 +82,8 @@ def ekf_slam(xEst, PEst, u, z):
             xEst = xAug
             PEst = PAug
             
-            print( f"State vector after: \n{xEst}" )
+            if SHOW_EST_STATE_VECTOR:
+                print( f"State vector after: \n{xEst}" )
         
         # get the assumed location of the landmark
         # from the state vector
@@ -309,6 +314,10 @@ def main():
         # xDR: dead-reckoning estimated robot pose [x,y,yaw]
         # ud: control vector with noise
         xTrue, z, xDR, ud = observation(xTrue, xDR, u, RFID)
+
+        if SHOW_WHICH_LANDMARKS_ARE_CURRENTLY_DETECTED :
+            print( f"Measurement matrix={z[:,2]}" )
+
 
         # EKF SLAM gives us two estimates:
         # - an estimated robot pose xEst
