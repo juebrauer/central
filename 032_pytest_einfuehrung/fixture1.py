@@ -9,9 +9,11 @@ def test_foo(tmp_path):
     
     # Wir brauchen erstmal eine Textdatei!
     # Aber wo? Dazu nehmen wir das Testverzeichnis
-    print("tmp_path = ", tmp_path)
+    print("tmp_path = ", tmp_path)    
+    print(type(tmp_path))
+    fname = str(tmp_path) + "/eine_datei.txt"
+    print("fname = ", fname)
     
-    fname = "eine_datei.txt"
     text_file = open(fname, "w")
     text_file.write("ABC\n")
     text_file.write("123\n")
