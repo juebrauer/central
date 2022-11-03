@@ -1,0 +1,12 @@
+LICENSE
+README.rst
+setup.py
+pyexample/__init__.py
+pyexample/module_mpi4py_1.py
+pyexample/module_numpy_1.py
+pyexample/module_numpy_2.py
+pyexample.egg-info/PKG-INFO
+pyexample.egg-info/SOURCES.txt
+pyexample.egg-info/dependency_links.txt
+pyexample.egg-info/requires.txt
+pyexample.egg-info/top_level.txt
