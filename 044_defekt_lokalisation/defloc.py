@@ -81,11 +81,50 @@ def get_ground_truth_label(defbox, ROI, show=False):
 
 
 
+filter=1
+if filter == 1:
+    F = numpy.array( [[1,1,1],
+                     [0,0,0],
+                     [-1,-1,-1]] )
+elif filter == 2:
+    F = numpy.array( [[1,0,-1],
+                     [1,0,-1],
+                     [1,0,-1]] )
+
+
 def get_descriptor_vector(img, ROI, show=False):
     
     
     def map_img_ROI_to_descriptor_vector_VERSION_RAW(img_ROI):
         vec = img_ROI.flatten()
+        return vec
+    
+    def map_img_ROI_to_descriptor_vector_VERSION_STATISTICS(img_ROI):
+        vec = numpy.zeros(3)
+        vec[0] = img_ROI.min()
+        vec[1] = img_ROI.max()
+        vec[2] = img_ROI.var()
+        return vec
+    
+    def map_img_ROI_to_descriptor_vector_VERSION_FILTER(img_ROI):
+        R = cv2.filter2D(img_ROI, -1, F)
+        vec = R.flatten()
+        return vec
+    
+    def map_img_ROI_to_descriptor_vector_VERSION_HISTOGRAM(img_ROI):
+        hist = cv2.calcHist([img_ROI], [0], None, [256], [0, 256])
+        vec = hist.flatten()
+        return vec
+    
+    def map_img_ROI_to_descriptor_vector_VERSION_DCT(img_ROI):
+        # convert the grayscale to float32
+        imf = numpy.float32(img_ROI)
+
+        # find discrete cosine transform
+        freqs = cv2.dct(imf, cv2.DCT_INVERSE)
+        
+        freqs_small = freqs[0:5,0:5]        
+        vec = freqs_small.flatten()
         return vec
     
     x0,y0,w,h = ROI
@@ -98,6 +137,10 @@ def get_descriptor_vector(img, ROI, show=False):
         plt.show()
     
     vec = map_img_ROI_to_descriptor_vector_VERSION_RAW(img_ROI)
+    #vec = map_img_ROI_to_descriptor_vector_VERSION_STATISTICS(img_ROI)
+    #vec = map_img_ROI_to_descriptor_vector_VERSION_FILTER(img_ROI)
+    #vec = map_img_ROI_to_descriptor_vector_VERSION_HISTOGRAM(img_ROI)
+    #vec = map_img_ROI_to_descriptor_vector_VERSION_DCT(img_ROI)
     return vec
 
 
