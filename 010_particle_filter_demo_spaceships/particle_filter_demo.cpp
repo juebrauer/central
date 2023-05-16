@@ -326,7 +326,7 @@ Mat get_image_of_continuous_probability_distribution(particle_filter* pf)
    } // for (y)
 
    double elpased_time= (clock()-start_time) / CLOCKS_PER_SEC;
-   printf("Time elpased for computing continuous density: %.2f sec", elpased_time);
+   printf("Time elpased for computing continuous density: %.2f sec\n", elpased_time);
 
    // 8. free memory
    delete LUT_EXP;
@@ -523,6 +523,20 @@ int main()
     alien_spaceship.move();
 
 
+    // simulate TELEPORT of spaceships?
+    if (SPACE_SHIPS_CAN_TELEPORT)
+    {
+      vector<spaceship::part_info*> part_infos = alien_spaceship.get_part_info_vector();        for (unsigned int part_nr = 0; part_nr < part_infos.size(); part_nr++)
+      {
+        if (rand() % 500 == 0)
+        {
+          part_infos[part_nr]->location.x = rand() % background_image.cols;
+          part_infos[part_nr]->location.y = rand() % background_image.rows;
+        }
+      }
+    }
+
+
     // 7.4 simulate noisy measurements
 
     // 7.4.1 clear measurement vector
@@ -553,7 +567,7 @@ int main()
     } // for (part_nr)
 
 
-    // 7.4.2 add some wrong measurements from time to time
+    // 7.4.2 add some completely wrong measurements from time to time
     if (SIMULATE_COMPLETELY_WRONG_MEASUREMENTS)
     {
       bool always_generate_wrong_measurements = true;
@@ -706,7 +720,7 @@ int main()
             for (unsigned int i = 0; i < clusters.size(); i++)
             {
                 circle(image, clusters[i],
-                        SPACESHIP_PART_SIZE_IN_PIXELS/2,
+                        5,
                         CV_RGB(0, 0, 255), 2);
             }
         } // if (user wants to cluster particle population)
