@@ -105,6 +105,8 @@ def main():
             est_h=h,
             Jacobi_f=Jacobi_f,
             Jacobi_h=Jacobi_h)
+    
+    print(f"State dimension is {ekf.dim}")
 
 
     # 4. simulation loop
@@ -177,8 +179,8 @@ def main():
     plt.plot( state_uncertainties, 'black')    
     
     # 9. plot error of KF state estimate vs. measurement
-    # select a state dimension here (D=0 or D=1):
-    D = 1
+    # select a state dimension here (D=0 or D=1 or D=2):
+    D = 2
     ekf_errors  = [ est[D]-actual[D] for actual,est  in zip(true_xs, pred_xs)]
     z_errors = [meas[D]-actual[D] for actual,meas in zip(true_xs, zs)]
     plt.subplot(4,1,4)
