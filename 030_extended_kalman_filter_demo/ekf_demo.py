@@ -11,6 +11,8 @@ www.juergen.brauer.org
 """
 
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import extended_kalman_filter
 from params import *
@@ -174,21 +176,23 @@ def main():
     plt.ylabel("state uncertainty")    
     plt.plot( state_uncertainties, 'black')    
     
-    # 9. plot error of KF state estimate vs. measurement    
-    ekf_state1_errors  = [ est[1]-actual[1] for actual,est  in zip(true_xs, pred_xs)]
-    meas_state1_errors = [meas[1]-actual[1] for actual,meas in zip(true_xs, zs)]
+    # 9. plot error of KF state estimate vs. measurement
+    # select a state dimension here (D=0 or D=1):
+    D = 1
+    ekf_errors  = [ est[D]-actual[D] for actual,est  in zip(true_xs, pred_xs)]
+    z_errors = [meas[D]-actual[D] for actual,meas in zip(true_xs, zs)]
     plt.subplot(4,1,4)
-    plt.title("Errors per time step")
+    plt.title(f"Errors per time step for state dim #{D}")
     plt.xlabel("time [s]")
     plt.ylabel("error")    
-    avg_error_ekf = np.mean(np.abs(ekf_state1_errors))
-    plt.plot( ekf_state1_errors,
+    avg_error_ekf = np.mean(np.abs(ekf_errors))
+    plt.plot( ekf_errors,
               'blue',
-              label=f"EKF state1 error, avg={avg_error_ekf:.3f}")
-    avg_error_meas = np.mean(np.abs(meas_state1_errors))
-    plt.plot( meas_state1_errors,
+              label=f"EKF estimate error, avg={avg_error_ekf:.3f}")
+    avg_error_meas = np.mean(np.abs(z_errors))
+    plt.plot( z_errors,
               'green',              
-              label=f"measurement state1 error, avg={avg_error_meas:.3f}" )
+              label=f"measurement error,  avg={avg_error_meas:.3f}" )
     plt.legend()
 
     # 10. add more vertical space between subplots
