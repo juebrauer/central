@@ -1,5 +1,7 @@
 from params import *
 import numpy as np
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 from kalman_filter import *
 
@@ -15,6 +17,7 @@ true_x = initial_x.copy()
 true_xs = []
 zs      = []
 kf_xs   = []
+state_uncertainties = [] 
 
 kf = kalman_filter(initial_x=initial_x,
                    initial_P=initial_P,
@@ -38,18 +41,21 @@ while simu_time < max_simu_time:
     z = true_H @ true_x + measurement_noise
 
     kf.predict(u)
-    kf.correct_prediction_using_measurement(z)
+    if simu_time != 0 and simu_time % measurement_each_nth_step == 0:
+        kf.correct_prediction_using_measurement(z)
 
     kf_xs.append( kf.x ) 
 
     true_xs.append( true_x )
     zs.append( z )
+    print(f"simu_time: {simu_time}:\n{kf.P}")
+    state_uncertainties.append( kf.get_scalar_measure_of_uncertainty_about_state() ) 
     simu_time += dt
 
 plt.figure( figsize=(15,10) )
 
 # plot true, measured position of car
-plt.subplot(4,1, 1)
+plt.subplot(5,1, 1)
 plt.title("Position")
 plt.xlabel("time [s]")
 plt.ylabel("position [m]")
@@ -59,7 +65,7 @@ plt.plot( [x[0] for x in kf_xs],   "blue",  label="KF estimate" )
 plt.legend()
 
 # plot true, measured speed of car
-plt.subplot(4,1, 2)
+plt.subplot(5,1, 2)
 plt.title("Speed")
 plt.xlabel("time [s]")
 plt.ylabel("speed [m/s]")
@@ -73,7 +79,7 @@ meas_pos_errors = [x[0]-z[0] for x,z in zip(true_xs, zs)]
 kf_pos_errors   = [x[0]-x_kf[0] for x,x_kf in zip(true_xs, kf_xs)]
 MAE_meas_pos = np.mean(np.abs(meas_pos_errors))
 MAE_kf_pos   = np.mean(np.abs(kf_pos_errors))
-plt.subplot(4,1, 3)
+plt.subplot(5,1, 3)
 plt.title("Position Error")
 plt.xlabel("time [s]")
 plt.ylabel("position error [m]")
@@ -86,13 +92,20 @@ meas_speed_errors = [x[1]-z[1] for x,z in zip(true_xs, zs)]
 kf_speed_errors   = [x[1]-x_kf[1] for x,x_kf in zip(true_xs, kf_xs)]
 MAE_meas_speed = np.mean(np.abs(meas_speed_errors))
 MAE_kf_speed   = np.mean(np.abs(kf_speed_errors))
-plt.subplot(4,1, 4)
+plt.subplot(5,1, 4)
 plt.title("Speed Error")
 plt.xlabel("time [s]")
 plt.ylabel("speed error [m/s]")
 plt.plot( meas_speed_errors, "green", label=f"measurement error (MAE={MAE_meas_speed:.2f})" )
 plt.plot( kf_speed_errors,   "blue",  label=f"KF estimate error (MAE={MAE_kf_speed:.2f})"   )
 plt.legend()
+
+# plot uncertainties about estimated states over time
+plt.subplot(5,1, 5)
+plt.title("State uncertainty")
+plt.xlabel("time [s]")
+plt.ylabel("state uncertainty")
+plt.plot(state_uncertainties, "black")
 
 plt.subplots_adjust(hspace=1)
 

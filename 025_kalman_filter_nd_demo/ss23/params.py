@@ -39,4 +39,6 @@ true_H = np.array( [[1.0, 0.0],
 true_R = np.array( [[10,  0.0],
                     [0.0, 1.0]])
 
+measurement_each_nth_step = 10
+
 
