@@ -33,22 +33,22 @@ class extended_kalman_filter:
 
 
     def predict(self):
-
         """"
         EKF prediction step equations:
         x=est_f(x,u)
         P=F*P*F^t + Q
           where F is the Jacobi matrix of est_f
         """
-        self.x = self.est_f(self.x)
-
+        
         # evaluate Jacobi matrix of f at position x
         # i.e.
         # get a local linear approximation of
         # the non-linear function f
         F = self.Jacobi_f(self.x)
-
         self.P = F @ self.P @ F.T + self.Q
+        
+        self.x = self.est_f(self.x)
+
 
 
     def get_scalar_measure_of_uncertainty_about_state(self):
@@ -63,7 +63,7 @@ class extended_kalman_filter:
         and
 
         https://math.stackexchange.com/questions/889425/what-does-determinant-of-covariance-matrix-give
-        --> # "The larger |Σ|, the more are your data points dispersed"
+        --> # "The larger |covariance matrix|, the more are your data points dispersed"
 
         """
         return np.linalg.det( self.P )

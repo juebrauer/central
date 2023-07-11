@@ -25,9 +25,9 @@ class extended_kalman_filter:
         self.dim = len(self.x)
 
     def predict(self):
-
-        self.x = self.est_f(self.x)
-        F = self.Jacobi_f(self.x)
+        
+        F = self.Jacobi_f(self.x)        
+        self.x = self.est_f(self.x)        
         self.P = F @ self.P @ F.T + self.Q
         
         
