@@ -19,6 +19,10 @@
 /// which has the ability to represent multi-modal
 /// probability distributions. Fortunately!
 ///
+///
+/// Note: you need OpenCV-Dev to compile this code!
+///       For this, install the library with:
+///          sudo apt install libopencv-dev
 /// ---
 /// by Prof. Dr. Juergen Brauer, www.juergenbrauer.org
 
@@ -77,8 +81,8 @@ class update_by_prediction_model : particle_filter_update_model
     
     if (USE_NOISE_IN_PREDICTION_STEP)
     {
-       x  += get_rnd_from_interval(-5.0f, 5.0f);
-       y  += get_rnd_from_interval(-5.0f, 5.0f);
+       x  += get_rnd_from_interval(-25.0f, 25.0f);
+       y  += get_rnd_from_interval(-1.0f, 1.0f);
        vx += get_rnd_from_interval(-0.1f, 0.1f);
        vy += get_rnd_from_interval(-0.1f, 0.1f);
        //vx += get_rnd_from_interval(-5.0f, 5.0f);
@@ -624,12 +628,6 @@ int main()
       show_space_ship = !show_space_ship;
     }
 
-    
-    // 10. draw alien spaceship into image?
-    if (show_space_ship)
-      alien_spaceship.draw_yourself_into_this_image( image );
-
-
     // 11. visualize all measurements by yellow circles
     for (unsigned int i = 0; i < measurements.size(); i++)
     {
@@ -697,6 +695,11 @@ int main()
 
       } // for (all particles)
     } // if (we currently track using the particle filter)
+
+
+    // 10. draw alien spaceship into image?
+    if (show_space_ship)
+      alien_spaceship.draw_yourself_into_this_image( image );
 
     
     // 15. does the user want to generate a continous probability image based

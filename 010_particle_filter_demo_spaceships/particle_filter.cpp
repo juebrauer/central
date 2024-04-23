@@ -273,7 +273,9 @@ void particle_filter::update()
 
 
   // 3. update each particle
-  // #pragma omp parallel for
+  #ifdef USE_OPENMP
+    #pragma omp parallel for
+  #endif
   for (unsigned int i = 0; i<all_particles.size(); i++)
   {
     // 3.1 get next particle

@@ -50,6 +50,9 @@
 //        and RESAMPLING true
 //
 
+// use OpenMP for speed up?
+//#define USE_OPENMP
+
 // wait for key press after each simulation step?
 #define STEP_BY_STEP 1
 
@@ -74,7 +77,7 @@
 
 // how many particles do we want to use to model
 // the probability density function (pdf)?
-#define POPULATION_SIZE 2000
+#define POPULATION_SIZE 10000
 
 
 // how many parts has the spacehship?
