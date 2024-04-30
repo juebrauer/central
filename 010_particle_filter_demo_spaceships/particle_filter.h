@@ -33,6 +33,13 @@
 #include <vector>         // for storing all the particles in a vector
 #include "random_tools.h" // for get_rnd_from_interval()
 
+#include <opencv2/core.hpp>
+
+
+
+using namespace cv;
+using namespace std;
+
 
 ///
 /// for each particle we store its location in state space
@@ -98,7 +105,7 @@ public:
 
    particle*             sample_one_particle_according_to_importance_weight_pdf();
 
-   void                  update();
+   void                  update(vector<Mat>& measurements);
   
 
    bool									     start_locations_initalized;

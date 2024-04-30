@@ -77,7 +77,7 @@
 
 // how many particles do we want to use to model
 // the probability density function (pdf)?
-#define POPULATION_SIZE 10000
+#define POPULATION_SIZE 2000
 
 
 // how many parts has the spacehship?
@@ -113,6 +113,11 @@
 // of particles
 #define RESAMPLING false
 
+// this should help, when resampling to reduce
+// the problem of losing the tracking of objects
+#define RESEEDING_OF_PARTICLES_FRACTION 0.05
+#define PUT_FRACTION_OF_PARTICLES_TO_MEASUREMENTS false
+
 
 // speed-up computation of continuous density
 // using a LUT (look-up table) for exp() function values
@@ -130,6 +135,8 @@
 // tolerance for cluster building
 #define TOLERANCE_CLUSTER_BUILDING 5
 
-#define CYLINDER_KERNEL_RADIUS 50
+#define CYLINDER_KERNEL_RADIUS 70
 
 #define CONVERGENCE_THRESHOLD_MEAN_SHIFT_VEC_LEN 1
+
+

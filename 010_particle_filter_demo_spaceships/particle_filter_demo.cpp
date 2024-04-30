@@ -81,8 +81,8 @@ class update_by_prediction_model : particle_filter_update_model
     
     if (USE_NOISE_IN_PREDICTION_STEP)
     {
-       x  += get_rnd_from_interval(-25.0f, 25.0f);
-       y  += get_rnd_from_interval(-1.0f, 1.0f);
+       x  += get_rnd_from_interval(-5.0f, 5.0f);
+       y  += get_rnd_from_interval(-5.0f, 5.0f);
        vx += get_rnd_from_interval(-0.1f, 0.1f);
        vy += get_rnd_from_interval(-0.1f, 0.1f);
        //vx += get_rnd_from_interval(-5.0f, 5.0f);
@@ -628,57 +628,49 @@ int main()
       show_space_ship = !show_space_ship;
     }
 
-    // 11. visualize all measurements by yellow circles
-    for (unsigned int i = 0; i < measurements.size(); i++)
-    {
-      Point p((int) measurements[i].at<float>(0,0), (int) measurements[i].at<float>(1,0));
-      circle(image, p, 5, CV_RGB(255,255,0), -1);
-    }
-
-
-    // 12. do one particle filter update step
+    // 10. do one particle filter update step
     int time_needed = 0;
     if (my_pf != NULL)
     {
        int64 start_time = getTickCount();
-       my_pf->update();
+       my_pf->update( measurements );
        time_needed = (int)
           ((getTickCount() - start_time) * 1000.0/ cv::getTickFrequency());
     }
 
 
-    // 13. if the user wants to track the spaceship,
+    // 11. if the user wants to track the spaceship,
     //     we initialize a particle filter
     if (c == 't')
     {
       std::cout << "Starting tracking spaceship using particle filter..." << std::endl;
 
-      // 13.1 if there is already a particle filter object,
+      // 11.1 if there is already a particle filter object,
       //      delete it
       if (my_pf != NULL)
         delete my_pf;
 
-      // 13.2 generate new particle filter object
+      // 11.2 generate new particle filter object
       my_pf = new particle_filter(POPULATION_SIZE, 4);
 
-      // 13.3 initialize particle filter:
+      // 11.3 initialize particle filter:
 
-      // 13.4 set state space dimensions
+      // 11.4 set state space dimensions
       my_pf->set_param_ranges(0, 0.0f, (float)image.cols); // x-position
       my_pf->set_param_ranges(1, 0.0f, (float)image.rows); // y-position
       my_pf->set_param_ranges(2, -1.0f, 1.0f);             // velocity x (vx)
       my_pf->set_param_ranges(3, -1.0f, 1.0f);             // velocity y (vy)
 
-      // 13.5 set motion & measurement model			
+      // 11.5 set motion & measurement model			
       my_pf->set_prediction_model((particle_filter_update_model*)my_update_by_prediction_model);
       my_pf->set_perception_model((particle_filter_update_model*)my_update_by_measurement_model);
 
-      // 13.6 start with random positions in state space and uniform weight distribution
+      // 11.6 start with random positions in state space and uniform weight distribution
       my_pf->reset_positions_and_weights();
     }
 
 
-    // 14. visualize all particle locations
+    // 12. visualize all particle locations
     if (my_pf != NULL)
     {
       for (int i = 0; i < my_pf->population_size; i++)
@@ -697,9 +689,16 @@ int main()
     } // if (we currently track using the particle filter)
 
 
-    // 10. draw alien spaceship into image?
+    // 13. draw alien spaceship into image?
     if (show_space_ship)
       alien_spaceship.draw_yourself_into_this_image( image );
+
+    // 14. visualize all measurements by yellow circles
+    for (unsigned int i = 0; i < measurements.size(); i++)
+    {
+      Point p((int) measurements[i].at<float>(0,0), (int) measurements[i].at<float>(1,0));
+      circle(image, p, 5, CV_RGB(255,255,0), -1);
+    }
 
     
     // 15. does the user want to generate a continous probability image based

@@ -1,5 +1,6 @@
 #include "particle_filter.h"
 #include <omp.h>
+#include <iostream>
 
 ///
 ///  generate a particle filter with
@@ -255,7 +256,7 @@ particle* particle_filter::sample_one_particle_according_to_importance_weight_pd
 ///
 /// one particle filter update step
 ///
-void particle_filter::update()
+void particle_filter::update(vector<Mat>& measurements)
 {
   // 1. did the user specify a motion and a perception update model?
   if (your_prediction_model == nullptr)
@@ -355,10 +356,48 @@ void particle_filter::update()
 
     // 5.4 set new sample population as current population
     all_particles = new_population;
-  }
+
+  } // end-if RESAMPLING
 
 
-  // 6. find particle with highest weight / highest prob
+  // 6. reseed a fraction of the population
+  //    to the set of measurements?
+  if (PUT_FRACTION_OF_PARTICLES_TO_MEASUREMENTS)
+  {
+    // how many particles to keep?
+    // how many particles to put (randomly) to measurements?
+    unsigned int N = all_particles.size();
+    unsigned int N_reseed = (int) (RESEEDING_OF_PARTICLES_FRACTION * (float)N);
+    //std::cout << "N_reseed " << N_reseed << "\n";
+
+    // reposition the first N_reseed particles
+    // randomly to a measurement
+    unsigned int N_measurements = measurements.size();
+    for (unsigned int i = 0; i < N_reseed; i++)
+    {      
+      // get that particle
+      particle* p = all_particles[i];
+
+      // choose one of the measurements randomly
+      unsigned int idx = rand() % N_measurements;
+
+      // get measurement arguments
+      float m_x  = measurements[idx].at<float>(0,0);
+      float m_y  = measurements[idx].at<float>(1,0);
+      float m_vx = measurements[idx].at<float>(2,0);
+      float m_vy = measurements[idx].at<float>(3,0);
+
+      // set state of the particle to (m_x, m_y, m_vx, m_vy)
+      p->state[0] = m_x;
+      p->state[1] = m_y;
+      p->state[2] = m_vx;
+      p->state[3] = m_vy;
+    }
+
+  } // end-if PUT_FRACTION_OF_PARTICLES_TO_MEASUREMENTS
+
+
+  // 7. find particle with highest weight / highest prob
   particle_with_highest_weight = nullptr;
   for (unsigned int i = 0; i<all_particles.size(); i++)
   {
@@ -370,7 +409,7 @@ void particle_filter::update()
   }
 
 
-  // 7. one particle filter update step done more!
+  // 8. one particle filter update step done more!
   nr_update_steps_done++;
 
 } // update
