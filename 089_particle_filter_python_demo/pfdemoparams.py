@@ -1,4 +1,10 @@
 N_particles = 1000
-N_statedims = 4 # x,y,vx,vy
+N_statedims = 4 # y,x,vy,vx
+
+PARTICLE_FOLLOW_MEASUREMENT_SPEED = 0.3
+NOISE_MEASUREMENT_CORRECTION_STEP = 1.5
+
+
+
 COLOR_PARTICLE = (0, 0, 255)
 PARTICLE_VIS_RADIUS = 1
