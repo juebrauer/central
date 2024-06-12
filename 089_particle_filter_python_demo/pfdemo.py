@@ -16,8 +16,63 @@ import numpy as np
 import pfdemoparams
 import time
 from scipy.spatial import KDTree
+from scipy.stats import gaussian_kde
 
-cap = cv2.VideoCapture(0)
+def list_available_cameras():
+    available_cameras = []
+    for camera_id in range(10):
+        print(f"Versuche Zugriff auf Kamera Nr. {camera_id} ...", end=" ")
+        cap = cv2.VideoCapture(camera_id)
+        if cap.isOpened():
+            print("ERFOLG!")
+            available_cameras.append(camera_id)
+            cap.release()
+        else:
+            print("FEHLGESCHLAGEN!")
+    return available_cameras
+
+
+def compute_pdf(P, frame_height, frame_width, grid_size=100):
+
+    y_coords = P[:, 0]
+    x_coords = P[:, 1]
+
+    # Erstelle die 2D-Daten für den KDE
+    data = np.vstack([x_coords, y_coords])
+
+    # Erzeuge einen KDE
+    kde = gaussian_kde(data)
+
+    # Erstelle ein Raster, um die Wahrscheinlichkeitsdichte zu evaluieren
+    xmin, xmax = 0, frame_width
+    ymin, ymax = 0, frame_height
+
+    X, Y = np.mgrid[xmin:xmax:complex(0, grid_size), ymin:ymax:complex(0, grid_size)]
+    positions = np.vstack([X.ravel(), Y.ravel()])
+    Z = np.reshape(kde(positions).T, X.shape)
+    
+    return Z
+
+
+def generate_pdf_visualtion(Z):
+
+    # Normiere Z für die Visualisierung
+    Z = (Z - Z.min()) / (Z.max() - Z.min())
+    Z = (Z * 255).astype(np.uint8)
+    Z = Z.T
+
+    # Erzeuge ein RGB-Bild
+    Z_color = cv2.applyColorMap(Z, cv2.COLORMAP_COOL)
+
+    return Z_color
+
+    
+available_cameras = list_available_cameras()
+print("-" * 40)
+print("Verfügbare Kameras:", available_cameras)
+print("-" * 40 + "\n")
+
+cap = cv2.VideoCapture(2)
 if not cap.isOpened():
     print("Kann die Kamera nicht öffnen")
     exit()
@@ -180,6 +235,16 @@ try:
 
         cv2.imshow('Kamera-Feed', frame)
         cv2.imshow('Yellow Mask', mask)
+
+        # Bei gegebener Partikelpopulation P
+        # berechne auf einem Raster Z von (100,100) Punkten die Dichte
+        # dann mappe diese (100,100) Werte auf Farbwerte (pdf_visu)
+        # und zeige pdf_visu an
+        if frame_nr % 3 == 0:
+            Z = compute_pdf(P, frame_height=frame.shape[0], frame_width=frame.shape[1])
+            pdf_visu = generate_pdf_visualtion(Z)
+            cv2.imshow('PDF', pdf_visu)
+
 
 finally:
     # free resources
