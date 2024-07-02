@@ -2,7 +2,7 @@ import numpy as np
 
 
 dt = 1.0 # simulation resolution / increment
-max_simu_time = 60 # 1 minute
+max_simu_time = 120 # 1 minute
 
 start_pos = 0 # meter
 start_speed = 13.8 # [m/s] = ca. 50 km/h
@@ -13,6 +13,10 @@ start_speed = 13.8 # [m/s] = ca. 50 km/h
 #              | 0.0 1.0 |  | speed |   | speed          |
 #
 #                  (2,2)      (2,1)  -->  (2,1)
+
+initial_estimated_x = np.array( [start_pos, start_speed] )
+initial_estimated_P = np.array( [[ 1.0, 0.0],
+                                 [ 0.0, 1.0]])
 
 true_F = np.array( [[1.0, dt],
                     [0.0, 1.0]])
@@ -29,7 +33,7 @@ true_B = np.array( [[0],
                     [dt]]) 
 
 # process noise covariance matrix Q
-true_Q = np.array( [[1.0, 0.0],
+true_Q = np.array( [[3.0, 0.0],
                     [0.0, 0.01]])
 
 # true measurement matrix
@@ -37,5 +41,5 @@ true_H = np.array( [[0.98, 0.0],
                     [0.0,  1.02]])
 
 # measurement noise covariance matrix R
-true_R = np.array( [[1000.0, 0.0],
+true_R = np.array( [[100.0, 0.0],
                     [0.0,   1.0]])

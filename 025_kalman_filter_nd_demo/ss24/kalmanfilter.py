@@ -32,6 +32,9 @@ class kalman_filter:
         self.x = self.x + self.K @ self.y
         self.P = (np.eye(self.dim) - (self.K @ self.H)) @ self.P
 
+    def get_scalar_measure_of_uncertainty_about_state(self):
+        return np.linalg.det( self.P )
+
     
 
         
